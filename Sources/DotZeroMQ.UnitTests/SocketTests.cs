@@ -27,6 +27,11 @@ namespace DotZeroMQ.UnitTests
             yield return $"inproc://{Guid.NewGuid():N}";
         }
 
+        private static List<object[]> GetEndpointParam()
+        {
+            return GetEndpoints().Select(e => new object[] {e}).ToList();
+        }
+
         private static IEnumerable<object[]> GetSocketTypeParam() => SocketTypes.Select(st => new object[]{st});
 
         private static List<object[]> GetSocketTypeAndEndpointParams()
@@ -96,6 +101,22 @@ namespace DotZeroMQ.UnitTests
             using (var socket = new ZmqSocket(ZmqContext.Current, ZmqSocketType.Req))
                 // ReSharper disable once AccessToDisposedClosure
                 Assert.ThrowsException<ZmqException>(() => socket.Connect("tpc://127.0.0.1:5556"));
+        }
+
+        [TestMethod]
+        [DynamicData(nameof(GetEndpointParam), DynamicDataSourceType.Method)]
+        public void Socket_Send_Receive_Test(string endpoint)
+        {
+            using (var receiver = new ZmqSocket(ZmqContext.Current, ZmqSocketType.Rep))
+            using (var sender = new ZmqSocket(ZmqContext.Current, ZmqSocketType.Req))
+            {
+                receiver.Bind(endpoint);
+                sender.Connect(endpoint);
+                var message = MessageTests.GetTestData();
+                sender.Send(message);
+                var receivedMessage = receiver.Receive();
+                CollectionAssert.AreEqual(message, receivedMessage);
+            }
         }
     }
 }
