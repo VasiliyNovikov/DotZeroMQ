@@ -22,7 +22,6 @@ namespace DotZeroMQ.ConsoleTest
                 server.SendText(message);
                 Console.WriteLine($"Server sent: {message}");
             }
-
         }
 
         private static void Client(string endpoint)
