@@ -53,7 +53,7 @@ namespace DotZeroMQ.UnitTests
         public void Socket_Create_Dispose_Test(ZmqSocketType socketType)
         {
             ZmqSocket socket;
-            using (socket = new ZmqSocket(ZmqContext.Current, socketType))
+            using (socket = ZmqContext.Current.Socket(socketType))
             {
                 Assert.AreEqual(ZmqContext.Current, socket.Context);
                 Assert.AreEqual(socketType, socket.SocketType);
@@ -68,7 +68,7 @@ namespace DotZeroMQ.UnitTests
         [DynamicData(nameof(GetSocketTypeAndEndpointParams), DynamicDataSourceType.Method)]
         public void Socket_Bind_Unbind_Test(ZmqSocketType socketType, string endpoint)
         {
-            using (var socket = new ZmqSocket(ZmqContext.Current, socketType))
+            using (var socket = ZmqContext.Current.Socket(socketType))
             {
                 socket.Bind(endpoint);
                 socket.Unbind(endpoint);
@@ -79,7 +79,7 @@ namespace DotZeroMQ.UnitTests
         [DynamicData(nameof(GetSocketTypeAndEndpointParams), DynamicDataSourceType.Method)]
         public void Socket_Connect_Disconnect_Test(ZmqSocketType socketType, string endpoint)
         {
-            using (var socket = new ZmqSocket(ZmqContext.Current, socketType))
+            using (var socket = ZmqContext.Current.Socket(socketType))
             {
                 socket.Connect(endpoint);
                 socket.Disconnect(endpoint);
@@ -90,7 +90,7 @@ namespace DotZeroMQ.UnitTests
         [DynamicData(nameof(GetWrongEndpointsParam), DynamicDataSourceType.Method)]
         public void Socket_Bind_Wrong_Endpoint_Test(string endpoint)
         {
-            using (var socket = new ZmqSocket(ZmqContext.Current, ZmqSocketType.Req))
+            using (var socket = ZmqContext.Current.Socket(ZmqSocketType.Req))
                 // ReSharper disable once AccessToDisposedClosure
                 Assert.ThrowsException<ZmqException>(() => socket.Bind(endpoint));
         }
@@ -98,7 +98,7 @@ namespace DotZeroMQ.UnitTests
         [TestMethod]
         public void Socket_Connect_Wrong_Endpoint_Test()
         {
-            using (var socket = new ZmqSocket(ZmqContext.Current, ZmqSocketType.Req))
+            using (var socket = ZmqContext.Current.Socket(ZmqSocketType.Req))
                 // ReSharper disable once AccessToDisposedClosure
                 Assert.ThrowsException<ZmqException>(() => socket.Connect("tpc://127.0.0.1:5556"));
         }
@@ -107,15 +107,49 @@ namespace DotZeroMQ.UnitTests
         [DynamicData(nameof(GetEndpointParam), DynamicDataSourceType.Method)]
         public void Socket_Send_Receive_Test(string endpoint)
         {
-            using (var receiver = new ZmqSocket(ZmqContext.Current, ZmqSocketType.Rep))
-            using (var sender = new ZmqSocket(ZmqContext.Current, ZmqSocketType.Req))
+            using (var receiver = ZmqContext.Current.Socket(ZmqSocketType.Rep))
+            using (var senderContext = new ZmqContext())
+            using (var sender = (endpoint.StartsWith("inproc") ? ZmqContext.Current : senderContext).Socket(ZmqSocketType.Req))
             {
                 receiver.Bind(endpoint);
                 sender.Connect(endpoint);
+                
                 var message = MessageTests.GetTestData();
                 sender.Send(message);
                 var receivedMessage = receiver.Receive();
                 CollectionAssert.AreEqual(message, receivedMessage);
+            }
+        }
+
+        [TestMethod]
+        [DynamicData(nameof(GetEndpointParam), DynamicDataSourceType.Method)]
+        public void Socket_Send_Receive_Multipart_Test(string endpoint)
+        {
+            using (var receiver = new ZmqSocket(ZmqContext.Current, ZmqSocketType.Rep))
+            using (var senderContext = new ZmqContext())
+            using (var sender = (endpoint.StartsWith("inproc") ? ZmqContext.Current : senderContext).Socket(ZmqSocketType.Req))
+            {
+                receiver.Bind(endpoint);
+                sender.Connect(endpoint);
+
+                var message1 = MessageTests.GetTestData();
+                var message2 = MessageTests.GetTestData();
+                sender.Send(message1, ZmqSendReceiveFlags.SendMore);
+                sender.Send(message2);
+
+                using (var receivedMessage1 = new ZmqMessage())
+                {
+                    receiver.Receive(receivedMessage1);
+                    CollectionAssert.AreEqual(message1, receivedMessage1.ToArray());
+                    Assert.IsTrue(receivedMessage1.HasMore);
+                }
+
+                using (var receivedMessage2 = new ZmqMessage())
+                {
+                    receiver.Receive(receivedMessage2);
+                    CollectionAssert.AreEqual(message2, receivedMessage2.ToArray());
+                    Assert.IsFalse(receivedMessage2.HasMore);
+                }
             }
         }
     }

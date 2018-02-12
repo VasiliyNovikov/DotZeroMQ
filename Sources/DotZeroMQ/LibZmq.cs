@@ -32,10 +32,13 @@ namespace DotZeroMQ
         public static extern int zmq_msg_close(IntPtr msg);
         
         [DllImport(Lib, CallingConvention = CallingConv, SetLastError = true)]
-        public static extern UIntPtr zmq_msg_size (IntPtr msg);
+        public static extern UIntPtr zmq_msg_size(IntPtr msg);
         
         [DllImport(Lib, CallingConvention = CallingConv, SetLastError = true)]
-        public static extern IntPtr zmq_msg_data (IntPtr msg);
+        public static extern IntPtr zmq_msg_data(IntPtr msg);
+        
+        [DllImport(Lib, CallingConvention = CallingConv, SetLastError = true)]
+        public static extern int zmq_msg_more(IntPtr message);
         
         
         [DllImport(Lib, CallingConvention = CallingConv, SetLastError = true)]
@@ -57,9 +60,9 @@ namespace DotZeroMQ
         public static extern int zmq_disconnect(ZmqSocketSafeHandle socket, string endpoint);
         
         [DllImport(Lib, CallingConvention = CallingConv, SetLastError = true)]
-        public static extern int zmq_msg_send (IntPtr msg, ZmqSocketSafeHandle socket, ZmqSendReceiveFlags flags);
+        public static extern int zmq_msg_send(IntPtr msg, ZmqSocketSafeHandle socket, ZmqSendReceiveFlags flags);
         
         [DllImport(Lib, CallingConvention = CallingConv, SetLastError = true)]
-        public static extern int zmq_msg_recv (IntPtr msg, ZmqSocketSafeHandle socket, ZmqSendReceiveFlags flags);
+        public static extern int zmq_msg_recv(IntPtr msg, ZmqSocketSafeHandle socket, ZmqSendReceiveFlags flags);
     }
 }

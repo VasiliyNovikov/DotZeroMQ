@@ -13,10 +13,11 @@ namespace DotZeroMQ
 
     public static class ZmqExceptionExtensions
     {
-        public static void ThrowIfLastError(this int result)
+        public static int ThrowIfLastError(this int result)
         {
             if (result == -1)
                 throw new ZmqException(Marshal.GetLastWin32Error());
+            return result;
         }
 
         public static THandle ThrowIfLastError<THandle>(this THandle result)

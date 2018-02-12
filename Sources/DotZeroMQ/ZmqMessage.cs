@@ -16,6 +16,15 @@ namespace DotZeroMQ
             }
         }
 
+        public bool HasMore
+        {
+            get
+            {
+                this.CheckDisposed();
+                return LibZmq.zmq_msg_more(this._nativeMessage).ThrowIfLastError() != 0;
+            }
+        }
+
         public ZmqMessage(int initialSize = 0)
         {
             if (initialSize < 0) throw new ArgumentOutOfRangeException(nameof(initialSize));
@@ -74,40 +83,6 @@ namespace DotZeroMQ
         {
             this.CheckDisposed();
             return LibZmq.zmq_msg_data(this._nativeMessage);
-        }
-
-        public void CopyTo(byte[] target, int targetOffset = 0, int length = -1)
-        {
-            this.CheckDisposed();
-            if (targetOffset < 0 || targetOffset >= target.Length) throw new ArgumentOutOfRangeException(nameof(targetOffset));
-            
-            if (length == -1)
-                length = target.Length;
-            
-            if (length <= 0 || targetOffset + length > target.Length || length > this.Size) throw new ArgumentOutOfRangeException(nameof(length));
-            
-            Marshal.Copy(this.DangerousGetData(), target, targetOffset, length);
-        }
-
-        public void CopyFrom(byte[] source, int sourceOffset = 0, int length = -1)
-        {
-            this.CheckDisposed();
-            if (sourceOffset < 0 || sourceOffset >= source.Length) throw new ArgumentOutOfRangeException(nameof(sourceOffset));
-            
-            if (length == -1)
-                length = source.Length;
-            
-            if (length <= 0 || sourceOffset + length > source.Length || length > this.Size) throw new ArgumentOutOfRangeException(nameof(length));
-
-            Marshal.Copy(source, sourceOffset, this.DangerousGetData(), length);
-        }
-
-        public byte[] ToArray()
-        {
-            this.CheckDisposed();
-            var result = new byte[this.Size];
-            this.CopyTo(result);
-            return result;
         }
     }
 }

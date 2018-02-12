@@ -19,10 +19,5 @@ namespace DotZeroMQ
         {
             this.Handle.Dispose();
         }
-
-        public ZmqSocket Socket(ZmqSocketType socketType)
-        {
-            return new ZmqSocket(this, socketType);
-        }
     }
 }
