@@ -27,18 +27,16 @@ namespace DotZeroMQ.UnitTests
             yield return $"inproc://{Guid.NewGuid():N}";
         }
 
-        private static List<object[]> GetEndpointParam()
+        private static IEnumerable<object[]> GetEndpointParam()
         {
-            return GetEndpoints().Select(e => new object[] {e}).ToList();
+            return GetEndpoints().Select(e => new object[] {e});
         }
 
         private static IEnumerable<object[]> GetSocketTypeParam() => SocketTypes.Select(st => new object[]{st});
 
-        private static List<object[]> GetSocketTypeAndEndpointParams()
+        private static IEnumerable<object[]> GetSocketTypeAndEndpointParams()
         {
-            return SocketTypes
-                .SelectMany(st => GetEndpoints().ToList(), (st, addr) => new object[] {st, addr})
-                .ToList();
+            return SocketTypes.SelectMany(st => GetEndpoints(), (st, ep) => new object[] {st, ep});
         }
         
         private static IEnumerable<object[]> GetWrongEndpointsParam()
