@@ -5,10 +5,10 @@ namespace DotZeroMQ.ConsoleTest
 {
     internal static class Program
     {
-        private static void Main()
+        private static async Task Main()
         {
             var endpoint = $"ipc:///tmp/{Guid.NewGuid():N}.sock";
-            Task.WaitAll(Task.Run(() => Server(endpoint)), Task.Run(() => Client(endpoint)));
+            await Task.WhenAll(Task.Run(() => Server(endpoint)), Task.Run(() => Client(endpoint)));
         }
 
         private static void Server(string endpoint)
