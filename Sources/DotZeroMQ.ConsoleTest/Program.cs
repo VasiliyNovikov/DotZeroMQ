@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace DotZeroMQ.ConsoleTest
 {
@@ -6,22 +7,36 @@ namespace DotZeroMQ.ConsoleTest
     {
         private static void Main()
         {
-            Console.WriteLine("Create context");
-            using (var context = new ZmqContext())
-            {
-                var nativeContext = context.Handle.DangerousGetHandle();
-                Console.WriteLine($"Context: {nativeContext}");
-            }
-            Console.WriteLine();
+            var endpoint = $"ipc:///tmp/{Guid.NewGuid():N}.sock";
+            Task.WaitAll(Task.Run(() => Server(endpoint)), Task.Run(() => Client(endpoint)));
+        }
 
-
-            Console.WriteLine("Create socket");
-            using (var socket = ZmqContext.Current.Socket(ZmqSocketType.Rep))
+        private static void Server(string endpoint)
+        {
+            using (var server = ZmqContext.Current.Socket(ZmqSocketType.Rep))
             {
-                var nativeSocket = socket.Handle.DangerousGetHandle();
-                Console.WriteLine($"Socket: {nativeSocket}");
+                server.Bind(endpoint);
+                
+                Console.WriteLine($"Server received: {server.ReceiveText()}");
+                var message = "World";
+                server.SendText(message);
+                Console.WriteLine($"Server sent: {message}");
             }
-            Console.WriteLine();
+
+        }
+
+        private static void Client(string endpoint)
+        {
+            using (var clientContext = new ZmqContext())
+            using (var client = clientContext.Socket(ZmqSocketType.Req))
+            {
+                client.Connect(endpoint);
+                
+                const string message = "Hello";
+                client.SendText(message);
+                Console.WriteLine($"Client sent: {message}");
+                Console.WriteLine($"Client received: {client.ReceiveText()}");
+            }
         }
     }
 }
