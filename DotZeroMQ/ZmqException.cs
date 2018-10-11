@@ -9,6 +9,10 @@ namespace DotZeroMQ
             : base(error)
         {
         }
+        public ZmqException(string message)
+            : base(message)
+        {
+        }
     }
 
     public static class ZmqExceptionExtensions

@@ -1,0 +1,77 @@
+parameters:
+  platformSuffix: ''
+  vmImage: ''
+  createPackage: false
+
+jobs:
+- job:  ${{ format('Build_{0}', parameters.platformSuffix) }}
+  dependsOn: 
+  - libzmq_linux
+  - libzmq_x86
+  - libzmq_x64
+  - libzmq_macos
+  pool: 
+    vmImage: ${{ parameters.vmImage }}
+  steps:
+  - task: DownloadBuildArtifacts@0
+    displayName: 'Download Build Artifacts'
+    inputs:
+      downloadType: specific
+      downloadPath: $(Build.ArtifactStagingDirectory)
+
+  - script: |
+      cd DotZeroMQ
+      mkdir lib
+      cd ..
+      cp $(Build.ArtifactStagingDirectory)/libzmq.so/libzmq.so DotZeroMQ/lib/libzmq.so
+      cp $(Build.ArtifactStagingDirectory)/libzmq.dylib/libzmq.dylib DotZeroMQ/lib/libzmq.dylib
+      cp $(Build.ArtifactStagingDirectory)/libzmq-x86.dll/libzmq-x86.dll DotZeroMQ/lib/libzmq-x86.dll
+      cp $(Build.ArtifactStagingDirectory)/libzmq-x64.dll/libzmq-x64.dll DotZeroMQ/lib/libzmq-x64.dll
+
+    displayName: Copy libzmq binaries to lib directory
+
+  - task: DotNetCoreInstaller@0
+    displayName: 'Use .NET Core sdk 2.1.403'
+    inputs:
+      version: 2.1.403
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Restore'
+    inputs:
+      command: restore
+      projects: DotZeroMQ.sln
+
+  - task: DotNetCoreCLI@2
+    displayName: Build
+    inputs:
+      command: build
+      projects: DotZeroMQ.sln
+      arguments: --configuration $(buildConfiguration) --no-restore
+
+  - task: DotNetCoreCLI@2
+    displayName: Test
+    inputs:
+      command: test
+      projects: DotZeroMQ.UnitTests/DotZeroMQ.UnitTests.csproj
+      arguments: --configuration $(buildConfiguration) --no-build
+
+  - ${{ if eq(parameters.createPackage, 'true') }}:
+    - bash: |
+        rm -r $(Build.ArtifactStagingDirectory)
+        mkdir -p $(Build.ArtifactStagingDirectory)
+
+      displayName: Cleanup artifacts directory
+
+    - task: DotNetCoreCLI@2
+      displayName: Pack
+      inputs:
+        command: pack
+        packagesToPack: DotZeroMQ/DotZeroMQ.csproj
+        configuration: $(buildConfiguration)
+        nobuild: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Artifact
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)
+        ArtifactName: package

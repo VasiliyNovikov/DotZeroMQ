@@ -1,0 +1,31 @@
+parameters:
+  msBuildPlatform: ''
+  platformSuffix: ''
+
+jobs:
+- job: ${{ format('libzmq_{0}', parameters.platformSuffix) }}
+  pool: 
+    vmImage: vs2017-win2016
+  steps:
+  - powershell: DotZeroMQ/download_lib.ps1
+    displayName: Download libzmq sources
+  
+  - task: VSBuild@1
+    displayName: Build libzmq
+    inputs:
+      solution: DotZeroMQ\zeromq\builds\msvc\vs2015\libzmq\libzmq.vcxproj
+      vsVersion: 15.0
+      platform: ${{ parameters.msBuildPlatform }}
+      configuration: ReleaseDLL
+      maximumCpuCount: true
+      msbuildArchitecture: x64
+      createLogFile: true
+
+  - script: ${{ format('cp DotZeroMQ/zeromq/bin/{0}/Release/v140/dynamic/libzmq.dll $(Build.ArtifactStagingDirectory)/libzmq-{1}.dll', parameters.msBuildPlatform, parameters.platformSuffix) }}
+    displayName: 'Copy libzmq to artifacts directory'
+
+  - task: PublishBuildArtifacts@1
+    displayName: Publish libzmq
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)
+      ArtifactName: ${{ format('libzmq-{0}.dll', parameters.platformSuffix) }}

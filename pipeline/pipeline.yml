@@ -1,0 +1,65 @@
+variables:
+  buildConfiguration: 'Release'
+
+trigger:
+- master
+
+jobs:
+- template: libzmq_linux.yml
+
+- template: libzmq_macos.yml
+
+- template: libzmq_windows.yml
+  parameters:
+    msBuildPlatform: Win32
+    platformSuffix: x86
+
+- template: libzmq_windows.yml
+  parameters:
+    msBuildPlatform: x64
+    platformSuffix: x64
+
+- template: build.yml
+  parameters:
+    platformSuffix: x64
+    vmImage: vs2017-win2016
+
+- template: build.yml
+  parameters:
+    platformSuffix: x86
+    vmImage: vs2017-win2016
+
+- template: build.yml
+  parameters:
+    platformSuffix: Linux
+    vmImage: ubuntu-16.04
+    createPackage: true
+
+- template: build.yml
+  parameters:
+    platformSuffix: MacOS
+    vmImage: macOS-10.13
+
+- job: Publish
+  dependsOn: 
+  - Build_Linux
+  - Build_x64
+  - Build_x86
+  - Build_MacOS
+  condition: "and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))"
+  pool: 
+    vmImage: vs2017-win2016
+  steps:
+  - task: DownloadBuildArtifacts@0
+    displayName: Download NuGet package Artifact
+    inputs:
+      artifactName: package
+      downloadPath: $(Build.ArtifactStagingDirectory)
+
+  - task: DotNetCoreCLI@2
+    displayName: Push to NuGet
+    inputs:
+      command: push
+      packagesToPush: $(Build.ArtifactStagingDirectory)/package/*.nupkg
+      nuGetFeedType: external
+      publishFeedCredentials: NuGet.org

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DotZeroMQ.UnitTests
@@ -23,7 +24,8 @@ namespace DotZeroMQ.UnitTests
         private static IEnumerable<string> GetEndpoints()
         {
             yield return $"tcp://127.0.0.1:{GetTestPort()}";
-            yield return $"ipc:///tmp/{Guid.NewGuid():N}.sock";
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                yield return $"ipc:///tmp/{Guid.NewGuid():N}.sock";
             yield return $"inproc://{Guid.NewGuid():N}";
         }
 
@@ -43,7 +45,8 @@ namespace DotZeroMQ.UnitTests
         {
             yield return new object[]{ "tpc://127.0.0.1:5556" };
             yield return new object[]{ "tcp://10.20.30.40:5556" };
-            yield return new object[]{ "ipc:///nonexistentdir/test.sock" };
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                yield return new object[]{ "ipc:///nonexistentdir/test.sock" };
         }
 
         [TestMethod]

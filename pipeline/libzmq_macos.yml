@@ -1,0 +1,16 @@
+jobs:
+- job: libzmq_macos
+  pool: 
+    vmImage: macOS-10.13
+  steps:
+  - bash: cd DotZeroMQ && bash build_lib.sh
+    displayName: 'Download & Build libzmq'
+
+  - script: cp DotZeroMQ/zeromq/src/.libs/libzmq.5.dylib $(Build.ArtifactStagingDirectory)/libzmq.dylib
+    displayName: Copy libzmq to artifacts directory
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish libzmq'
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)
+      ArtifactName: 'libzmq.dylib'
