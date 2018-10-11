@@ -56,7 +56,7 @@ jobs:
       artifactName: package
       downloadPath: $(Build.ArtifactStagingDirectory)
 
-  - task: DotNetCoreCLI@2
+  - task: NuGetCommand@2
     displayName: Push to NuGet
     inputs:
       command: push
