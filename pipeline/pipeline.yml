@@ -21,13 +21,22 @@ jobs:
 
 - template: build.yml
   parameters:
-    platformSuffix: x64
+    platformSuffix: Win_NetCore
     vmImage: vs2017-win2016
 
 - template: build.yml
   parameters:
-    platformSuffix: x86
+    platformSuffix: Win_Net471_x86
     vmImage: vs2017-win2016
+    buildFramework: net471
+    testPlatform: x86
+
+- template: build.yml
+  parameters:
+    platformSuffix: Win_Net471_x64
+    vmImage: vs2017-win2016
+    buildFramework: net471
+    testPlatform: x64
 
 - template: build.yml
   parameters:
@@ -43,8 +52,9 @@ jobs:
 - job: Publish
   dependsOn: 
   - Build_Linux
-  - Build_x64
-  - Build_x86
+  - Build_Win_NetCore
+  - Build_Win_Net471_x86
+  - Build_Win_Net471_x64
   - Build_MacOS
   condition: "and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))"
   pool: 
