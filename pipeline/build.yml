@@ -8,7 +8,7 @@ stages:
       matrix:
         Linux_NETCore21:
           imageName: ubuntu-latest
-          createPackage: true
+          createPackage: false
           buildFramework: netcoreapp2.1
           testPlatform: x64
         Linux_NETCore31:
@@ -88,23 +88,20 @@ stages:
         projects: DotZeroMQ.UnitTests/DotZeroMQ.UnitTests.csproj
         arguments: --no-build -c $(buildConfiguration) -f $(buildFramework) -- RunConfiguration.TargetPlatform=$(testPlatform)
 
-    - ${{ if eq(variables['createPackage'], 'true') }}:
-      - bash: |
-          rm -r $(Build.ArtifactStagingDirectory)
-          mkdir -p $(Build.ArtifactStagingDirectory)
+    - bash: "rm -r $(Build.ArtifactStagingDirectory) &&  mkdir -p $(Build.ArtifactStagingDirectory)"
+      displayName: Cleanup artifacts directory
+      condition: "and(succeeded(), eq(variables['createPackage'], 'true'))"
 
-        displayName: Cleanup artifacts directory
+    - task: DotNetCoreCLI@2
+      displayName: Pack
+      inputs:
+        command: pack
+        packagesToPack: DotZeroMQ/DotZeroMQ.csproj
+        configuration: $(buildConfiguration)
+        nobuild: true
+      condition: "and(succeeded(), eq(variables['createPackage'], 'true'))"
 
-      - task: DotNetCoreCLI@2
-        displayName: Pack
-        inputs:
-          command: pack
-          packagesToPack: DotZeroMQ/DotZeroMQ.csproj
-          configuration: $(buildConfiguration)
-          nobuild: true
-
-      - task: PublishBuildArtifacts@1
-        displayName: Publish Artifact
-        inputs:
-          PathtoPublish: $(Build.ArtifactStagingDirectory)
-          ArtifactName: package
+    - upload: $(Build.ArtifactStagingDirectory)
+      displayName: Publish libzmq
+      artifact: package
+      condition: "and(succeeded(), eq(variables['createPackage'], 'true'))"
