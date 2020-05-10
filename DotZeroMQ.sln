@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotZeroMQ", "DotZeroMQ\DotZeroMQ.csproj", "{BBB6AB5D-2F6F-46F1-8987-BEC9FCF3B773}"
 EndProject
@@ -13,13 +13,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pipeline", "pipeline", "{C2
 	ProjectSection(SolutionItems) = preProject
 		pipeline\build.yml = pipeline\build.yml
 		pipeline\libzmq_linux.yml = pipeline\libzmq_linux.yml
-		pipeline\libzmq_macos.yml = pipeline\libzmq_macos.yml
+		pipeline\libzmq_osx.yml = pipeline\libzmq_osx.yml
 		pipeline\libzmq_windows.yml = pipeline\libzmq_windows.yml
 		pipeline\pipeline.yml = pipeline\pipeline.yml
+		pipeline\publish.yml = pipeline\publish.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{130A6F43-0D12-4788-B97F-FBC84E9D0565}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection

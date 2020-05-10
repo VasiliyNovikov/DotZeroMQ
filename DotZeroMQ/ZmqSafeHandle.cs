@@ -12,10 +12,7 @@ namespace DotZeroMQ
         }
 
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        protected override bool ReleaseHandle()
-        {
-            return this.ReleaseZmqObject(this.handle) == 0;
-        }
+        protected override bool ReleaseHandle() => ReleaseZmqObject(handle) == 0;
 
         protected abstract int ReleaseZmqObject(IntPtr nativeZmqObject);
     }

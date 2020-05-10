@@ -1,79 +1,110 @@
-parameters:
-  platformSuffix: ''
-  vmImage: ''
-  createPackage: false
-  buildFramework: netcoreapp2.1
-  testPlatform: x64
+stages:
+- stage: build
+  displayName: "Build & Test DotZeroMQ"
+  dependsOn: libzmq_native
+  jobs:
+  - job:
+    strategy:
+      matrix:
+        Linux_NETCore21:
+          imageName: ubuntu-latest
+          createPackage: true
+          buildFramework: netcoreapp2.1
+          testPlatform: x64
+        Linux_NETCore31:
+          imageName: ubuntu-latest
+          createPackage: true
+          buildFramework: netcoreapp3.1
+          testPlatform: x64
+        OSX_NETCore31:
+          imageName: macOS-latest
+          createPackage: false
+          buildFramework: netcoreapp3.1
+          testPlatform: x64
+        Windows_NETCore21:
+          imageName: windows-latest
+          createPackage: false
+          buildFramework: netcoreapp2.1
+          testPlatform: x64
+        Windows_NETCore31:
+          imageName: windows-latest
+          createPackage: false
+          buildFramework: netcoreapp3.1
+          testPlatform: x64
+        Windows_NET48_x64:
+          imageName: windows-latest
+          createPackage: false
+          buildFramework: net48
+          testPlatform: x64
+        Windows_NET48_x86:
+          imageName: windows-latest
+          createPackage: false
+          buildFramework: net48
+          testPlatform: x86
+    pool:
+      vmImage: $(imageName)
+    steps:
+    - download: current
+      displayName: Download Build Artifacts
 
-jobs:
-- job:  ${{ format('Build_{0}', parameters.platformSuffix) }}
-  dependsOn: 
-  - libzmq_linux
-  - libzmq_x86
-  - libzmq_x64
-  - libzmq_macos
-  pool: 
-    vmImage: ${{ parameters.vmImage }}
-  steps:
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Build Artifacts'
-    inputs:
-      downloadType: specific
-      downloadPath: $(Build.ArtifactStagingDirectory)
+    - script: |
+        cd DotZeroMQ
+        mkdir lib
+        cd ..
+        cp $(Pipeline.Workspace)/libzmq.so/libzmq.so DotZeroMQ/lib/libzmq.so
+        cp $(Pipeline.Workspace)/libzmq.dylib/libzmq.dylib DotZeroMQ/lib/libzmq.dylib
+        cp $(Pipeline.Workspace)/libzmq-Win32.dll/libzmq-Win32.dll DotZeroMQ/lib/libzmq-Win32.dll
+        cp $(Pipeline.Workspace)/libzmq-x64.dll/libzmq-x64.dll DotZeroMQ/lib/libzmq-x64.dll
 
-  - script: |
-      cd DotZeroMQ
-      mkdir lib
-      cd ..
-      cp $(Build.ArtifactStagingDirectory)/libzmq.so/libzmq.so DotZeroMQ/lib/libzmq.so
-      cp $(Build.ArtifactStagingDirectory)/libzmq.dylib/libzmq.dylib DotZeroMQ/lib/libzmq.dylib
-      cp $(Build.ArtifactStagingDirectory)/libzmq-x86.dll/libzmq-x86.dll DotZeroMQ/lib/libzmq-x86.dll
-      cp $(Build.ArtifactStagingDirectory)/libzmq-x64.dll/libzmq-x64.dll DotZeroMQ/lib/libzmq-x64.dll
+      displayName: Copy libzmq binaries to lib directory
 
-    displayName: Copy libzmq binaries to lib directory
+    - task: UseDotNet@2
+      displayName: Use .NET Core SDK 2.2.x
+      inputs:
+        version: 2.2.x
 
-  - task: DotNetCoreInstaller@0
-    displayName: 'Use .NET Core sdk 2.1.500'
-    inputs:
-      version: 2.1.500
-
-  - task: DotNetCoreCLI@2
-    displayName: 'Restore'
-    inputs:
-      command: restore
-      projects: DotZeroMQ.sln
-
-  - task: DotNetCoreCLI@2
-    displayName: Build
-    inputs:
-      command: build
-      projects: DotZeroMQ.sln
-      arguments: --no-restore -c $(buildConfiguration)
-
-  - task: DotNetCoreCLI@2
-    displayName: Test
-    inputs:
-      command: test
-      projects: DotZeroMQ.UnitTests/DotZeroMQ.UnitTests.csproj
-      arguments: ${{ format('--no-build -c $(buildConfiguration) -f {0} --logger trx --results-directory $(Agent.TempDirectory) -- RunConfiguration.TargetPlatform={1}', parameters.buildFramework, parameters.testPlatform) }}
-
-  - ${{ if eq(parameters.createPackage, 'true') }}:
-    - bash: |
-        rm -r $(Build.ArtifactStagingDirectory)
-        mkdir -p $(Build.ArtifactStagingDirectory)
-
-      displayName: Cleanup artifacts directory
+    - task: UseDotNet@2
+      displayName: Use .NET Core SDK 3.1.x
+      inputs:
+        version: 3.1.x
 
     - task: DotNetCoreCLI@2
-      displayName: Pack
+      displayName: Restore
       inputs:
-        command: pack
-        packagesToPack: DotZeroMQ/DotZeroMQ.csproj
-        configuration: $(buildConfiguration)
-        nobuild: true
+        command: restore
+        projects: DotZeroMQ.sln
 
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Artifact
+    - task: DotNetCoreCLI@2
+      displayName: Build
       inputs:
-        PathtoPublish: $(Build.ArtifactStagingDirectory)
-        ArtifactName: package
+        command: build
+        projects: DotZeroMQ.sln
+        arguments: --no-restore -c $(buildConfiguration)
+
+    - task: DotNetCoreCLI@2
+      displayName: Test
+      inputs:
+        command: test
+        projects: DotZeroMQ.UnitTests/DotZeroMQ.UnitTests.csproj
+        arguments: --no-build -c $(buildConfiguration) -f $(buildFramework) -- RunConfiguration.TargetPlatform=$(testPlatform)
+
+    - ${{ if eq(variables['createPackage'], 'true') }}:
+      - bash: |
+          rm -r $(Build.ArtifactStagingDirectory)
+          mkdir -p $(Build.ArtifactStagingDirectory)
+
+        displayName: Cleanup artifacts directory
+
+      - task: DotNetCoreCLI@2
+        displayName: Pack
+        inputs:
+          command: pack
+          packagesToPack: DotZeroMQ/DotZeroMQ.csproj
+          configuration: $(buildConfiguration)
+          nobuild: true
+
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Artifact
+        inputs:
+          PathtoPublish: $(Build.ArtifactStagingDirectory)
+          ArtifactName: package

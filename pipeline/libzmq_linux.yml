@@ -1,7 +1,7 @@
 jobs:
 - job: libzmq_linux
   pool: 
-    vmImage: ubuntu-16.04
+    vmImage: ubuntu-latest
   steps:
   - bash: cd DotZeroMQ && bash build_lib.sh
     displayName: 'Download & Build libzmq'
@@ -9,8 +9,6 @@ jobs:
   - script: cp DotZeroMQ/zeromq/src/.libs/libzmq.so.5.1.5 $(Build.ArtifactStagingDirectory)/libzmq.so
     displayName: Copy libzmq to artifacts directory
 
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish libzmq'
-    inputs:
-      PathtoPublish: $(Build.ArtifactStagingDirectory)
-      ArtifactName: 'libzmq.so'
+  - upload: $(Build.ArtifactStagingDirectory)
+    displayName: Publish libzmq
+    artifact: libzmq.so

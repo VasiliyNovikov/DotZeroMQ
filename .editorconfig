@@ -1,0 +1,17 @@
+# To learn more about .editorconfig see https://aka.ms/editorconfigdocs
+
+# All files
+[*]
+indent_style = space
+end_of_line = lf
+[*.{yml,csproj}]
+indent_size = 2
+
+# Code files
+[*.{cs,csx,py,sh}]
+indent_size = 4
+[*.{cs,csx}]
+charset = utf-8-bom
+[*.{py,sh}]
+charset = utf-8
+insert_final_newline = true

@@ -4,72 +4,13 @@ variables:
 trigger:
 - master
 
-jobs:
-- template: libzmq_linux.yml
-
-- template: libzmq_macos.yml
-
-- template: libzmq_windows.yml
-  parameters:
-    msBuildPlatform: Win32
-    platformSuffix: x86
-
-- template: libzmq_windows.yml
-  parameters:
-    msBuildPlatform: x64
-    platformSuffix: x64
+stages:
+- stage: libzmq_native
+  displayName: Build libzmq Native Libraries
+  jobs:
+  - template: libzmq_linux.yml
+  - template: libzmq_osx.yml
+  - template: libzmq_windows.yml
 
 - template: build.yml
-  parameters:
-    platformSuffix: Win_NetCore
-    vmImage: vs2017-win2016
-
-- template: build.yml
-  parameters:
-    platformSuffix: Win_Net471_x86
-    vmImage: vs2017-win2016
-    buildFramework: net471
-    testPlatform: x86
-
-- template: build.yml
-  parameters:
-    platformSuffix: Win_Net471_x64
-    vmImage: vs2017-win2016
-    buildFramework: net471
-    testPlatform: x64
-
-- template: build.yml
-  parameters:
-    platformSuffix: Linux
-    vmImage: ubuntu-16.04
-    createPackage: true
-
-- template: build.yml
-  parameters:
-    platformSuffix: MacOS
-    vmImage: macOS-10.13
-
-- job: Publish
-  dependsOn: 
-  - Build_Linux
-  - Build_Win_NetCore
-  - Build_Win_Net471_x86
-  - Build_Win_Net471_x64
-  - Build_MacOS
-  condition: "and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))"
-  pool: 
-    vmImage: vs2017-win2016
-  steps:
-  - task: DownloadBuildArtifacts@0
-    displayName: Download NuGet package Artifact
-    inputs:
-      artifactName: package
-      downloadPath: $(Build.ArtifactStagingDirectory)
-
-  - task: NuGetCommand@2
-    displayName: Push to NuGet
-    inputs:
-      command: push
-      packagesToPush: $(Build.ArtifactStagingDirectory)/package/*.nupkg
-      nuGetFeedType: external
-      publishFeedCredentials: NuGet.org
+- template: publish.yml

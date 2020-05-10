@@ -9,15 +9,9 @@ namespace DotZeroMQ
         public static ZmqContext Current => CurrentLazy.Value;
         
         public ZmqContextSafeHandle Handle { get; }
-        
-        public ZmqContext()
-        {
-            this.Handle = LibZmq.zmq_ctx_new().ThrowIfLastError();
-        }
-        
-        public void Dispose()
-        {
-            this.Handle.Dispose();
-        }
+
+        public ZmqContext() => Handle = LibZmq.zmq_ctx_new().ThrowIfLastError();
+
+        public void Dispose() => Handle.Dispose();
     }
 }

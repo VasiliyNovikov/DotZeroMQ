@@ -18,7 +18,7 @@ namespace DotZeroMQ
                 if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
                     libName = "libzmq-x64.dll";
                 else
-                    libName = "libzmq-x86.dll";
+                    libName = "libzmq-Win32.dll";
             }
             else
                 throw new NotSupportedException($"Unsupported platform {RuntimeInformation.OSDescription}");

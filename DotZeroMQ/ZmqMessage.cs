@@ -11,8 +11,8 @@ namespace DotZeroMQ
         {
             get
             {
-                this.CheckDisposed();
-                return (int) LibZmq.zmq_msg_size(this._nativeMessage).ToUInt32();
+                CheckDisposed();
+                return (int) LibZmq.zmq_msg_size(_nativeMessage).ToUInt32();
             }
         }
 
@@ -21,7 +21,7 @@ namespace DotZeroMQ
             get
             {
                 this.CheckDisposed();
-                return LibZmq.zmq_msg_more(this._nativeMessage).ThrowIfLastError() != 0;
+                return LibZmq.zmq_msg_more(_nativeMessage).ThrowIfLastError() != 0;
             }
         }
 
@@ -29,60 +29,54 @@ namespace DotZeroMQ
         {
             if (initialSize < 0) throw new ArgumentOutOfRangeException(nameof(initialSize));
             
-            this._nativeMessage = Marshal.AllocHGlobal(Marshal.SizeOf<LibZmq.zmq_msg_t>());
+            _nativeMessage = Marshal.AllocHGlobal(Marshal.SizeOf<LibZmq.zmq_msg_t>());
             if (initialSize == 0)
-                LibZmq.zmq_msg_init(this._nativeMessage).ThrowIfLastError();
+                LibZmq.zmq_msg_init(_nativeMessage).ThrowIfLastError();
             else
-                LibZmq.zmq_msg_init_size(this._nativeMessage, new UIntPtr((uint)initialSize)).ThrowIfLastError();
+                LibZmq.zmq_msg_init_size(_nativeMessage, new UIntPtr((uint)initialSize)).ThrowIfLastError();
         }
 
         public ZmqMessage(byte[] data)
-            : this(data.Length)
-        {
-            this.CopyFrom(data);
-        }
+            : this(data.Length) => this.CopyFrom(data);
 
         public void Dispose()
         {
-            this.CheckDisposed();
-            this.ReleaseUnmanagedResources();
+            CheckDisposed();
+            ReleaseUnmanagedResources();
             GC.SuppressFinalize(this);
         }
 
-        ~ZmqMessage()
-        {
-            this.ReleaseUnmanagedResources();
-        }
+        ~ZmqMessage() => ReleaseUnmanagedResources();
 
         private void ReleaseUnmanagedResources()
         {
             try
             {
-                LibZmq.zmq_msg_close(this._nativeMessage).ThrowIfLastError();
+                LibZmq.zmq_msg_close(_nativeMessage).ThrowIfLastError();
             }
             finally
             {
-                Marshal.FreeHGlobal(this._nativeMessage);
-                this._nativeMessage = IntPtr.Zero;
+                Marshal.FreeHGlobal(_nativeMessage);
+                _nativeMessage = IntPtr.Zero;
             }
         }
 
         private void CheckDisposed()
         {
-            if (this._nativeMessage == IntPtr.Zero)
+            if (_nativeMessage == IntPtr.Zero)
                 throw new ObjectDisposedException(nameof(ZmqMessage));
         }
         
         public IntPtr DangerousGetNativeMessage()
         {
-            this.CheckDisposed();
-            return this._nativeMessage;
+            CheckDisposed();
+            return _nativeMessage;
         }
 
         public IntPtr DangerousGetData()
         {
-            this.CheckDisposed();
-            return LibZmq.zmq_msg_data(this._nativeMessage);
+            CheckDisposed();
+            return LibZmq.zmq_msg_data(_nativeMessage);
         }
     }
 }
