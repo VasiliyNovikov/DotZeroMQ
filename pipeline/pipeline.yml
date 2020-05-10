@@ -1,5 +1,6 @@
 variables:
-  buildConfiguration: 'Release'
+  buildConfiguration: Release
+  libzmqVersion: 4.3.2
 
 trigger:
 - master
@@ -8,9 +9,8 @@ stages:
 - stage: libzmq_native
   displayName: Build libzmq Native Libraries
   jobs:
-  - template: libzmq_linux.yml
-  - template: libzmq_osx.yml
-  - template: libzmq_windows.yml
+  - template: libzmq_nix.yml
+  - template: libzmq_win.yml
 
 - template: build.yml
 - template: publish.yml

@@ -1,0 +1,37 @@
+jobs:
+- job: libzmq_nix
+  strategy:
+    matrix:
+      Linux:
+        imageName: ubuntu-latest
+        libExtension: so
+      OSX:
+        imageName: macOS-latest
+        libExtension: dylib
+  pool:
+    vmImage: $(imageName)
+  steps:
+  - checkout: none
+
+  - bash: |
+      set -e
+      wget https://github.com/zeromq/libzmq/releases/download/v$(libzmqVersion)/zeromq-$(libzmqVersion).tar.gz
+      tar xf zeromq-$(libzmqVersion).tar.gz -C ./
+      mv zeromq-$(libzmqVersion) zeromq
+
+    displayName: Download libzmq sources
+
+  - bash: |
+      set -e
+      cd zeromq/
+      ./configure
+      make
+
+    displayName: Build libzmq
+
+  - bash: cp zeromq/src/.libs/libzmq.$(libExtension) $(Build.ArtifactStagingDirectory)/libzmq.$(libExtension)
+    displayName: Copy libzmq to artifacts directory
+
+  - upload: $(Build.ArtifactStagingDirectory)
+    displayName: Publish libzmq
+    artifact: libzmq.$(libExtension)

@@ -7,6 +7,8 @@ stages:
     pool:
       vmImage: windows-latest
     steps:
+    - checkout: none
+
     - download: current
       artifact: package
       displayName: Download NuGet package Artifact

@@ -1,0 +1,49 @@
+jobs:
+- job: libzmq_win
+  strategy:
+    matrix:
+      x86:
+        cmakeGenerator: Visual Studio 15 2017
+        msBuildPlatform: Win32
+      x64:
+        cmakeGenerator: Visual Studio 15 2017 Win64
+        msBuildPlatform: x64
+  pool:
+    vmImage: vs2017-win2016
+  steps:
+  - checkout: none
+
+  - pwsh: |
+      $url = "https://github.com/zeromq/libzmq/releases/download/v$(libzmqVersion)/zeromq-$(libzmqVersion).zip"
+      $output = "zeromq.zip"
+      Invoke-WebRequest -Uri $url -OutFile $output
+      Expand-Archive -Path zeromq.zip -DestinationPath .
+      mv zeromq-$(libzmqVersion) zeromq
+      rm zeromq.zip
+
+    displayName: Download libzmq sources
+
+  - pwsh: |
+      cd zeromq
+      mkdir build
+      cd build
+      cmake -G "$(cmakeGenerator)" ..
+
+    displayName: Build libzmq Visual Studio project
+
+  - task: VSBuild@1
+    displayName: Build libzmq
+    inputs:
+      solution: $(Build.SourcesDirectory)/zeromq/build/libzmq.vcxproj
+      vsVersion: 15.0
+      platform: $(msBuildPlatform)
+      configuration: Release
+      maximumCpuCount: true
+      msbuildArchitecture: x64
+
+  - script: cp $(Build.SourcesDirectory)/zeromq/build/bin/Release/libzmq-v141-mt-4_3_2.dll $(Build.ArtifactStagingDirectory)/libzmq-$(msBuildPlatform).dll
+    displayName: Copy libzmq to artifacts directory
+
+  - upload: $(Build.ArtifactStagingDirectory)
+    displayName: Publish libzmq
+    artifact: libzmq-$(msBuildPlatform).dll

@@ -12,9 +12,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pipeline", "pipeline", "{C2AA901E-2629-4BC3-8FF5-2D63B57AE62F}"
 	ProjectSection(SolutionItems) = preProject
 		pipeline\build.yml = pipeline\build.yml
-		pipeline\libzmq_linux.yml = pipeline\libzmq_linux.yml
-		pipeline\libzmq_osx.yml = pipeline\libzmq_osx.yml
-		pipeline\libzmq_windows.yml = pipeline\libzmq_windows.yml
+		pipeline\libzmq_nix.yml = pipeline\libzmq_nix.yml
+		pipeline\libzmq_win.yml = pipeline\libzmq_win.yml
 		pipeline\pipeline.yml = pipeline\pipeline.yml
 		pipeline\publish.yml = pipeline\publish.yml
 	EndProjectSection
