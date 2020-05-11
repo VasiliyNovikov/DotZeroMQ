@@ -1,6 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace DotZeroMQ
 {
@@ -23,9 +26,26 @@ namespace DotZeroMQ
             else
                 throw new NotSupportedException($"Unsupported platform {RuntimeInformation.OSDescription}");
 
-            var libPath = Path.Combine(Path.GetDirectoryName(typeof(LibZmq).Assembly.Location), "lib", libName);
-            if (!File.Exists(libPath))
-                throw new ZmqException($"libzmq library file is missing: {libPath}");
+            string libPath;
+            using (var libResourceStream = typeof(LibZmq).Assembly.GetManifestResourceStream($"{typeof(LibZmq).Namespace}.lib.{libName}"))
+            {
+                using (var sha256Hash = SHA256.Create())
+                {
+                    var rawHash = sha256Hash.ComputeHash(libResourceStream);
+                    var hash = new StringBuilder();
+                    foreach (byte b in rawHash)
+                        hash.Append(b.ToString("x2"));
+                    libPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"{libName}.{hash}");
+                }
+
+                if (!File.Exists(libPath))
+                {
+                    using var libStream = File.OpenWrite(libPath);
+                    libResourceStream.Position = 0;
+                    libResourceStream.CopyTo(libStream);
+                }
+            }
+
             var lib = new NativeLibrary(libPath);
             GC.SuppressFinalize(lib);
 

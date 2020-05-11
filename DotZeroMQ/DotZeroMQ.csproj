@@ -3,7 +3,7 @@
     <TargetFrameworks>netstandard2.0;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Version>0.8.0</Version>
+    <Version>0.9.0</Version>
     <Authors>Vasiliy Novikov</Authors>
     <Company />
     <Description>.NET Standard ZeroMQ wrapper</Description>
@@ -13,30 +13,14 @@
     <Copyright>Vasiliy Novikov</Copyright>
     <RepositoryUrl>https://github.com/VasiliyNovikov/DotZeroMQ</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
-    <AssemblyVersion>0.8.0.0</AssemblyVersion>
-    <FileVersion>0.8.0.0</FileVersion>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
+    <FileVersion>0.9.0.0</FileVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="lib\libzmq-Win32.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <Pack>true</Pack>
-      <PackageCopyToOutput>true</PackageCopyToOutput>
-    </Content>
-    <Content Include="lib\libzmq-x64.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <Pack>true</Pack>
-      <PackageCopyToOutput>true</PackageCopyToOutput>
-    </Content>
-    <Content Include="lib\libzmq.so">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <Pack>true</Pack>
-      <PackageCopyToOutput>true</PackageCopyToOutput>
-    </Content>
-    <Content Include="lib\libzmq.dylib">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <Pack>true</Pack>
-      <PackageCopyToOutput>true</PackageCopyToOutput>
-    </Content>
+    <EmbeddedResource Include="lib\libzmq-Win32.dll"/>
+    <EmbeddedResource Include="lib\libzmq-x64.dll"/>
+    <EmbeddedResource Include="lib\libzmq.so"/>
+    <EmbeddedResource Include="lib\libzmq.dylib"/>
   </ItemGroup>
 </Project>
